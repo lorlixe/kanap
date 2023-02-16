@@ -78,6 +78,7 @@ function itemCartDisplay(array, data)
     cartItemContentDescription.append(ItemColor)
 
     ItemPrice = document.createElement("p")
+    ItemPrice.setAttribute("class", "cart__item__price")
     cartItemContentDescription.append(ItemPrice)
 
 
@@ -106,23 +107,7 @@ function itemCartDisplay(array, data)
     DeleteItem.setAttribute("class", "deleteItem")
     Delete.append(DeleteItem)
     DeleteItem.innerHTML = "supprimer"
-    // -------------- Supprimer un element du panier ----------
-    DeleteItem.addEventListener('click',(e) =>{  
-      e.preventDefault()   
-      let itemToRemove = array.find(x => x.id == element.id && x.colors == element.colors);
-      let index = array.indexOf(itemToRemove);
-      array.splice(index, 1);
-      let articleNumber = index;
-      article.setAttribute("id", "article_"+articleNumber)
-      deletedArticle = document.getElementById("article_"+articleNumber)
-      deletedArticle.parentNode.removeChild(deletedArticle);
-      localStorage.setItem("listItem", JSON.stringify(array))
-      globalPrice -= element.price
-      allItems -= element.quantity
-      totalPrice.innerHTML = globalPrice
-      totalQuantity.innerHTML = allItems
-      displayform (globalPrice)
-    })
+    
 
     Img.src = element.imageUrl
     Img.alt = element.alt
@@ -133,23 +118,51 @@ function itemCartDisplay(array, data)
       if (item._id == element.id) {
         ItemPrice.innerHTML = item.price*QuantityInput.value +" €"
         globalPrice += item.price*QuantityInput.value
-        element["price"] = item.price*QuantityInput.value
+        let elementPrice = item.price*QuantityInput.value
     // -------------- Changer la quantité  ----------
-        QuantityInput.addEventListener('blur',(e) => {
-          globalPrice -= element["price"]
-          allItems -= array[array.indexOf(array.find(x => x.id == item._id))].quantity
-          array[array.indexOf(array.find(x => x.id == item._id))].quantity = e.target.valueAsNumber;
-          ItemPrice.innerHTML = item.price*QuantityInput.value +" €"
-          console.log(array[array.indexOf(array.find(x => x.id == item._id))].quantity)
-          element["price"] = item.price*(array[array.indexOf(array.find(x => x.id == item._id))].quantity) 
-          globalPrice += element["price"]
-          allItems += (array[array.indexOf(array.find(x => x.id == item._id))].quantity)
+        QuantityInput.addEventListener('change',(e) => {
+          let parentElement = e.target.closest('.cart__item');
+          ItemPrice = parentElement.querySelector('.cart__item__price')
+          globalPrice -= elementPrice
+          let itemChange= array.find(x => x.id == element.id && x.colors == element.colors)
+          console.log(itemChange)
+          allItems -= itemChange.quantity
+          array[array.indexOf(itemChange)].quantity = e.target.valueAsNumber;
+          console.log(itemChange.quantity)
+          if (itemChange.quantity == 0) {
+            let itemToRemove = array.find(x => x.id == element.id );
+            let index = array.indexOf(itemToRemove);
+            array.splice(index, 1);
+            parentElement.remove()
+            displayform (globalPrice)
+            console.log("supp")
+          }
+          elementPrice = itemChange.quantity*item.price
+          ItemPrice.innerHTML = item.price*e.target.valueAsNumber +" €"
+          globalPrice += elementPrice
+          allItems += (itemChange.quantity)
           totalQuantity.innerHTML = allItems
           totalPrice.innerHTML = globalPrice
-          localStorage.setItem("listItem", JSON.stringify(array))  
+          localStorage.setItem("listItem", JSON.stringify(array))
+        })
+       // -------------- Supprimer un element du panier ----------
+        DeleteItem.addEventListener('click',(e) =>{  
+          e.preventDefault() 
+          let parentElement = e.target.closest('.cart__item');
+          let itemToRemove = array.find(x => x.id == element.id );
+          let index = array.indexOf(itemToRemove);
+          array.splice(index, 1);
+          parentElement.remove()
+          displayform (globalPrice)
+          console.log("supp")
+          localStorage.setItem("listItem", JSON.stringify(array))
         })
       }
     });
+
+
+
+    
     localStorage.setItem("listItem", JSON.stringify(array))
     
     allItems += element.quantity
@@ -157,6 +170,10 @@ function itemCartDisplay(array, data)
     totalQuantity.innerHTML = allItems
     totalPrice.innerHTML = globalPrice
   }); 
+}
+
+function supp(){
+  
 }
 // -------------- afficher le formulaire ----------
 
@@ -185,21 +202,21 @@ function order(allCartItem) {
     // ------------Validation des champs------------
     let isValid = true;
     if(!(/^[a-zA-Z ]+$/).test(document.getElementById("firstName").value)) {
-      alert("Le champ prénom est obligatoire");
+      alert("Le champ prénom ne doit pas contenir de chiffre");
       isValid = false;
     }
     if(!(/^[a-zA-Z ]+$/).test(document.getElementById("lastName").value)) {
-      alert("Le champ nom est obligatoire");
+      alert("Le champ nom ne doit pas contenir de chiffre");
       isValid = false;
     }
     if(!(/^[a-zA-Z ]+$/).test(document.getElementById("city").value)) {
-      alert("Le champ ville est obligatoire");
+      alert("Le champ ville ne doit pas contenir de chiffre");
       isValid = false;
     }
     if(!(/^\w+([\.-]?\w+)*@\w+([\.-]?\w+)*(\.\w{2,3})+$/).test(document.getElementById("email").value)) {
       isValid = false;
       console.log(isValid)
-      alert("Cet email n'est pas valide");
+      alert("Cet email n'est pas valide, veuillez respecter ce format exemple@mail.com");
     }
     if(isValid) {
       console.log("envoyé")
